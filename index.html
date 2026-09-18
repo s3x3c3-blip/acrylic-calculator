@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>숫자 아크릴 수량 계산기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7FAFA;
+    --bg-alt: #EFF6F5;
+    --panel: rgba(255,255,255,0.85);
+    --panel-border: rgba(15,40,38,0.09);
+    --text: #142523;
+    --text-dim: #5C7370;
+    --accent: #0D9488;
+    --accent-dim: rgba(13,148,136,0.12);
+    --accent-glow: rgba(13,148,136,0.30);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(ellipse at 50% -10%, #E3F3F1 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 56px 20px 80px;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 640px;
+  }
+  .eyebrow-free-title {
+    font-family: 'Space Grotesk', 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 38px);
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    line-height: 1.25;
+  }
+  .desc {
+    color: var(--text-dim);
+    font-size: 15px;
+    line-height: 1.65;
+    max-width: 46ch;
+    margin: 0 0 40px;
+  }
+  .range-panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    backdrop-filter: blur(14px);
+    padding: 26px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(15,40,38,0.06);
+  }
+  .range-panel::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 8%; right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+  }
+  .field {
+    flex: 1;
+    min-width: 0;
+  }
+  .field label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .field input {
+    width: 100%;
+    background: rgba(15,40,38,0.03);
+    border: 1px solid rgba(15,40,38,0.14);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-size: 26px;
+    font-weight: 600;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .sep {
+    color: var(--text-dim);
+    font-size: 20px;
+    padding-top: 22px;
+  }
+  .status {
+    margin-top: 14px;
+    min-height: 20px;
+    font-size: 13.5px;
+    color: #DC2626;
+  }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 44px 0 16px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .section-title .total {
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .section-title .total b {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .range-panel { flex-direction: row; padding: 20px 16px; }
+  }
+  .tile {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 16px 10px 12px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s ease, transform .2s ease;
+    box-shadow: 0 6px 18px rgba(15,40,38,0.05);
+  }
+  .tile[data-zero="true"] {
+    opacity: 0.4;
+  }
+  .tile .digit {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile .count {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .tile .count b {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .tile .bar {
+    margin-top: 10px;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(15,40,38,0.08);
+    overflow: hidden;
+  }
+  .tile .bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+    transition: width .35s ease;
+  }
+  .foot-note {
+    margin-top: 40px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="eyebrow-free-title">숫자 아크릴, 몇 개씩 필요할까</h1>
+    <p class="desc">판매할 번호의 시작과 끝을 입력하면 0부터 9까지 각 숫자 아크릴이 몇 개씩 필요한지 바로 계산돼요.</p>
+
+    <div class="range-panel">
+      <div class="field">
+        <label for="startInput">시작 번호</label>
+        <input type="number" id="startInput" value="1" />
+      </div>
+      <div class="sep">→</div>
+      <div class="field">
+        <label for="endInput">끝 번호</label>
+        <input type="number" id="endInput" value="11" />
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+
+    <div class="section-title">
+      <span>숫자별 필요 개수</span>
+      <span class="total">아크릴 총 <b id="totalCount">0</b>개</span>
+    </div>
+    <div class="grid" id="grid"></div>
+
+    <p class="foot-note">예: 1부터 11까지 구매하려면 1이 4개, 0이 1개, 2~9가 각 1개씩 필요해요 (10, 11의 자릿수까지 포함).</p>
+  </div>
+
+<script>
+  const startInput = document.getElementById('startInput');
+  const endInput = document.getElementById('endInput');
+  const grid = document.getElementById('grid');
+  const totalEl = document.getElementById('totalCount');
+  const statusEl = document.getElementById('status');
+
+  for (let d = 0; d <= 9; d++) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.dataset.digit = d;
+    tile.innerHTML = `
+      <div class="digit">${d}</div>
+      <div class="count"><b class="c">0</b>개</div>
+      <div class="bar"><span style="width:0%"></span></div>
+    `;
+    grid.appendChild(tile);
+  }
+
+  function calculate() {
+    const start = parseInt(startInput.value, 10);
+    const end = parseInt(endInput.value, 10);
+
+    if (Number.isNaN(start) || Number.isNaN(end)) {
+      statusEl.textContent = '시작 번호와 끝 번호를 입력해주세요.';
+      return;
+    }
+    if (start < 0 || end < 0) {
+      statusEl.textContent = '0 이상의 번호만 입력할 수 있어요.';
+      return;
+    }
+    if (end < start) {
+      statusEl.textContent = '끝 번호가 시작 번호보다 작아요.';
+      return;
+    }
+    if (end - start > 200000) {
+      statusEl.textContent = '범위가 너무 넓어요. 20만 개 이하로 입력해주세요.';
+      return;
+    }
+    statusEl.textContent = '';
+
+    const counts = new Array(10).fill(0);
+    for (let n = start; n <= end; n++) {
+      const s = String(n);
+      for (let i = 0; i < s.length; i++) {
+        counts[s.charCodeAt(i) - 48]++;
+      }
+    }
+
+    const total = counts.reduce((a, b) => a + b, 0);
+    const max = Math.max(...counts, 1);
+    totalEl.textContent = total.toLocaleString('ko-KR');
+
+    document.querySelectorAll('.tile').forEach(tile => {
+      const d = Number(tile.dataset.digit);
+      const c = counts[d];
+      tile.querySelector('.c').textContent = c.toLocaleString('ko-KR');
+      tile.querySelector('.bar span').style.width = (c / max * 100) + '%';
+      tile.dataset.zero = c === 0 ? 'true' : 'false';
+    });
+  }
+
+  [startInput, endInput].forEach(el => el.addEventListener('input', calculate));
+  calculate();
+</script>
+</body>
+</html>
